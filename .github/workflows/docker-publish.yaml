@@ -9,6 +9,14 @@ jobs:
     permissions:
       packages: write
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php_version: 71
+            composer_version: 2.2.10
+          - php_version: 81
+            composer_version: 2.4.2
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -32,14 +40,16 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.composer_version }}
 
       - name: Build and push Docker images
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
           build-args: |
-            PHP_VERSION=71
-            COMPOSER_VERSION=2.2.10
+            PHP_VERSION=${{ matrix.php_version }}
+            COMPOSER_VERSION=${{ matrix.composer_version }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
